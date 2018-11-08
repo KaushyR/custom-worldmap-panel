@@ -5,8 +5,15 @@ module.exports = (grunt) => {
 
   grunt.loadNpmTasks('grunt-execute');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-zip');
 
   grunt.initConfig({
+
+    clean: {
+      build: ['dist/*'],
+      tmp: ['custom-worldmap'],
+      release: ['custom-worldmap.zip']
+    },
 
     copy: {
       src_to_dist: {
@@ -27,12 +34,18 @@ module.exports = (grunt) => {
         src: ['*.*'],
         dest: 'dist/images/'
       },
+      dist_to_tmp: {
+        cwd: 'dist/',
+        expand: true,
+        src: ['**/*'],
+        dest: 'custom-worldmap'
+      },
     },
 
     babel: {
       options: {
         sourceMap: true,
-        presets: ['es2015'],
+        presets: ['es2015', 'stage-0'],
         plugins: ['transform-es2015-modules-systemjs', 'transform-es2015-for-of'],
       },
       dist: {
@@ -46,7 +59,11 @@ module.exports = (grunt) => {
       },
     },
 
+    zip: {
+      'custom-worldmap.zip': ['custom-worldmap/**/*']
+    }
+
   });
 
-  grunt.registerTask('default', ['copy:src_to_dist', 'copy:pluginDef', 'copy:img_to_dist', 'babel']);
+  grunt.registerTask('default', ['clean:build', 'copy:src_to_dist', 'copy:pluginDef', 'copy:img_to_dist', 'babel', 'clean:release', 'clean:tmp', 'copy:dist_to_tmp', 'zip', 'clean:tmp']);
 };
