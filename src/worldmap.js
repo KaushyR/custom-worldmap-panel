@@ -25,6 +25,24 @@ const tileServers = {
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
     subdomains: 'abc'
 
+  },
+  'Esri Standard': {
+    url: 'https://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}',
+    attribution: 'Powered by <a href="https://www.esri.com/">Esri</a>| Esri, DeLorme, HERE, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), MapmyIndia, Tomtom',
+    subdomains: ''
+
+  },
+  'Esri Transportation': {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{x}/{y}',
+    attribution: 'Powered by <a href="https://www.esri.com/">Esri</a>| Esri, DeLorme, HERE, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), MapmyIndia, Tomtom',
+    subdomains: ''
+
+  },
+  'Esri Terrain': {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{x}/{y}',
+    attribution: 'Powered by <a href="https://www.esri.com/">Esri</a>| Esri, DeLorme, HERE, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), MapmyIndia, Tomtom',
+    subdomains: ''
+
   }
 };
 
