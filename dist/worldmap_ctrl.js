@@ -150,6 +150,15 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
               case 'Stamen Maps':
                 this.tileServer = 'Stamen Maps';
                 break;
+              case 'Esri(Standard)':
+                this.tileServer = 'Esri Standard';
+                break;
+              case 'Esri(Transportation)':
+                this.tileServer = 'Esri Transportation';
+                break;
+              case 'Esri(Terrain)':
+                this.tileServer = 'Esri Terrain';
+                break;
               case 'CartoDB':
               default:
                 this.tileServer = contextSrv.user.lightTheme ? 'CartoDB Positron' : 'CartoDB Dark';
