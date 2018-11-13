@@ -5,13 +5,13 @@ module.exports = (grunt) => {
 
   grunt.loadNpmTasks('grunt-execute');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-zip');
 
   grunt.initConfig({
 
     clean: {
       build: ['dist/*'],
-      release: ['custom-worldmap.zip']
+      tmp: ['custom-worldmap*'],
+      release: ['custom-worldmap*.zip']
     },
 
     copy: {
@@ -32,7 +32,13 @@ module.exports = (grunt) => {
         flatten: true,
         src: ['*.*'],
         dest: 'dist/images/'
-      }
+      },
+      dist_to_tmp: {
+        cwd: './',
+        expand: true,
+        src: ['**/*', '!**/node_modules/**', '!**/custom-worldmap*.zip'],
+        dest: 'custom-worldmap'
+      },
     },
 
     babel: {
@@ -52,11 +58,7 @@ module.exports = (grunt) => {
       },
     },
 
-    zip: {
-      'custom-worldmap.zip': ['./**/*']
-    }
-
   });
 
-  grunt.registerTask('default', ['clean:build', 'copy:src_to_dist', 'copy:pluginDef', 'copy:img_to_dist', 'babel', 'clean:release', 'zip']);
+  grunt.registerTask('default', ['clean:build', 'clean:tmp', 'clean:release', 'copy:src_to_dist', 'copy:pluginDef', 'copy:img_to_dist', 'babel', 'clean:release', 'copy:dist_to_tmp']);
 };
