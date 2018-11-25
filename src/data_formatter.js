@@ -137,49 +137,60 @@ export default class DataFormatter {
     return datapoints;
   }
 
-  setTableValues(tableData, data) {
+  setTableValues(tableData, masterData) {
     if (tableData && tableData.length > 0) {
       let highestValue = 0;
       let lowestValue = Number.MAX_VALUE;
 
-      tableData[0].forEach((datapoint) => {
-        let key;
-        let longitude;
-        let latitude;
+      let index = 0;
+      tableData.forEach((td) => {
+        const data = [];
+        td.forEach((datapoint) => {
+          let key;
+          let longitude;
+          let latitude;
 
-        if (this.ctrl.panel.tableQueryOptions.queryType === 'geohash') {
-          const encodedGeohash = datapoint[this.ctrl.panel.tableQueryOptions.geohashField];
-          const decodedGeohash = decodeGeoHash(encodedGeohash);
+          if (this.ctrl.panel.tableQueryOptions.queryType === 'geohash') {
+            try {
+              const encodedGeohash = datapoint[this.ctrl.panel.tableQueryOptions.geohashField];
+              const decodedGeohash = decodeGeoHash(encodedGeohash);
 
-          latitude = decodedGeohash.latitude;
-          longitude = decodedGeohash.longitude;
-          key = encodedGeohash;
-        } else {
-          latitude = datapoint[this.ctrl.panel.tableQueryOptions.latitudeField];
-          longitude = datapoint[this.ctrl.panel.tableQueryOptions.longitudeField];
-          key = `${latitude}_${longitude}`;
-        }
+              latitude = decodedGeohash.latitude;
+              longitude = decodedGeohash.longitude;
+              key = encodedGeohash;
+            } catch (exc) {
+              console.log('Invalid geohash value');
+            }
+          } else {
+            latitude = datapoint[this.ctrl.panel.tableQueryOptions.latitudeField];
+            longitude = datapoint[this.ctrl.panel.tableQueryOptions.longitudeField];
+            key = `${latitude}_${longitude}`;
+          }
 
-        const dataValue = {
-          key: key,
-          locationName: datapoint[this.ctrl.panel.tableQueryOptions.labelField] || 'n/a',
-          locationLatitude: latitude,
-          locationLongitude: longitude,
-          value: datapoint[this.ctrl.panel.tableQueryOptions.metricField],
-          valueFormatted: datapoint[this.ctrl.panel.tableQueryOptions.metricField],
-          valueRounded: 0
-        };
+          const dataValue = {
+            key: key,
+            locationName: datapoint[this.ctrl.panel.tableQueryOptions.labelField] || 'n/a',
+            locationLatitude: latitude,
+            locationLongitude: longitude,
+            marker: datapoint[this.ctrl.panel.tableQueryOptions.markerField],
+            value: datapoint[this.ctrl.panel.tableQueryOptions.metricField],
+            valueFormatted: datapoint[this.ctrl.panel.tableQueryOptions.metricField],
+            valueRounded: 0
+          };
 
-        if (dataValue.value > highestValue) highestValue = dataValue.value;
-        if (dataValue.value < lowestValue) lowestValue = dataValue.value;
+          if (dataValue.value > highestValue) highestValue = dataValue.value;
+          if (dataValue.value < lowestValue) lowestValue = dataValue.value;
 
-        dataValue.valueRounded = this.kbn.roundValue(dataValue.value, this.ctrl.panel.decimals || 0);
-        data.push(dataValue);
+          dataValue.valueRounded = this.kbn.roundValue(dataValue.value, this.ctrl.panel.decimals || 0);
+          data.push(dataValue);
+        });
+
+        masterData[index] = data;
+        data.highestValue = highestValue;
+        data.lowestValue = lowestValue;
+        data.valueRange = highestValue - lowestValue;
+        index += 1;
       });
-
-      data.highestValue = highestValue;
-      data.lowestValue = lowestValue;
-      data.valueRange = highestValue - lowestValue;
     }
   }
 
@@ -195,6 +206,7 @@ export default class DataFormatter {
           locationLatitude: point.latitude,
           locationLongitude: point.longitude,
           value: (point.value !== undefined) ? point.value : 1,
+          marker: (point.marker !== undefined) ? point.marker : null,
           valueRounded: 0
         };
         if (dataValue.value > highestValue) highestValue = dataValue.value;

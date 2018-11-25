@@ -7,6 +7,7 @@ import _ from 'lodash';
 import mapRenderer from './map_renderer';
 import DataFormatter from './data_formatter';
 import './css/worldmap-panel.css!';
+import Colors from './colors';
 
 const panelDefaults = {
   maxDataPoints: 1,
@@ -30,6 +31,7 @@ const panelDefaults = {
   useCustomAntPathColor: false,
   antPathColor: 'rgba(50, 172, 45, 0.97)',
   antPathPulseColor: '#FFFFFF',
+  extraLineColors: ['#ff4d4d', '#1aff8c'],
   mapTileServer: 'CartoDB',
   esMetric: 'Count',
   decimals: 0,
@@ -41,7 +43,8 @@ const panelDefaults = {
     geohashField: 'geohash',
     latitudeField: 'latitude',
     longitudeField: 'longitude',
-    metricField: 'metric'
+    metricField: 'metric',
+    markerField: 'marker'
   }
 
 };
@@ -66,7 +69,6 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
     this.currentTileServer = this.panel.mapTileServer;
     this.setMapProvider(contextSrv);
 
-    console.log('onInit current = %o', this.currentTileServer);
     this.dataFormatter = new DataFormatter(this, kbn);
 
     this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
@@ -103,7 +105,6 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   changeMapProvider() {
-    console.log('This = %o, Current = %o', this.panel.mapTileServer, this.currentTileServer);
     if (this.panel.mapTileServer !== this.currentTileServer) {
       this.setMapProvider(this.context);
       if (this.map) {
@@ -207,7 +208,8 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
 
     this.updateThresholdData();
 
-    if (this.data.length && this.panel.mapCenter === 'Last GeoHash') {
+    if (this.data && this.data.length > 0 &&
+      this.data[0].length && this.panel.mapCenter === 'Last GeoHash') {
       this.centerOnLastGeoHash();
     } else {
       this.render();
@@ -215,8 +217,8 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   centerOnLastGeoHash() {
-    mapCenters[this.panel.mapCenter].mapCenterLatitude = _.last(this.data).locationLatitude;
-    mapCenters[this.panel.mapCenter].mapCenterLongitude = _.last(this.data).locationLongitude;
+    mapCenters[this.panel.mapCenter].mapCenterLatitude = _.last(this.data[0]).locationLatitude;
+    mapCenters[this.panel.mapCenter].mapCenterLongitude = _.last(this.data[0]).locationLongitude;
     this.setNewMapCenter();
   }
 
@@ -280,6 +282,26 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
     this.render();
   }
 
+  changePathColors() {
+    this.map.setPathColors(this.panel.pathColor1, this.panel.pathColor2);
+  }
+
+  addExtraLineColor() {
+    this.panel.extraLineColors.push(Colors.random());
+    this.render();
+  }
+
+  removeLastExtraLineColor() {
+    if (this.panel.extraLineColors.length > 0) {
+      this.panel.extraLineColors.pop();
+      this.render();
+    }
+  }
+
+  changeExtraLineColors() {
+    this.map.setExtraLineColors(this.panel.extraLineColors);
+  }
+
   changeThresholds() {
     this.updateThresholdData();
     this.map.legend.update();
@@ -287,14 +309,17 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   updateThresholdData() {
-    this.data.thresholds = this.panel.thresholds.split(',').map((strValue) => {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+    this.data[0].thresholds = this.panel.thresholds.split(',').map((strValue) => {
       return Number(strValue.trim());
     });
-    while (_.size(this.panel.colors) > _.size(this.data.thresholds) + 1) {
+    while (_.size(this.panel.colors) > _.size(this.data[0].thresholds) + 1) {
       // too many colors. remove the last one.
       this.panel.colors.pop();
     }
-    while (_.size(this.panel.colors) < _.size(this.data.thresholds) + 1) {
+    while (_.size(this.panel.colors) < _.size(this.data[0].thresholds) + 1) {
       // not enough colors. add one.
       const newColor = 'rgba(50, 172, 45, 0.97)';
       this.panel.colors.push(newColor);
