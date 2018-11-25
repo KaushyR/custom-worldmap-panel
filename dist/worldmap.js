@@ -108,7 +108,7 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         _createClass(WorldMap, [{
           key: 'createMap',
           value: function createMap() {
-            window.L.Icon.Default.imagePath = '/public/plugins/grafana-custom-worldmap-panel/images/';
+            window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
             var mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
             this.map = window.L.map(this.mapContainer, { worldCopyJump: true, center: mapCenter, zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1 });
             this.setMouseWheelZoom();
