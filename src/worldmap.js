@@ -71,7 +71,7 @@ export default class WorldMap {
   }
 
   createMap() {
-    window.L.Icon.Default.imagePath = '/public/plugins/grafana-custom-worldmap-panel/images/';
+    window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
     const mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
     this.map = window.L.map(this.mapContainer, { worldCopyJump: true, center: mapCenter, zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1 });
     this.setMouseWheelZoom();
