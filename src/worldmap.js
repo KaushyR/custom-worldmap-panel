@@ -4,7 +4,7 @@ import L from './libs/leaflet';
 /* eslint-disable id-length, no-unused-vars */
 import {antPath} from './libs/leaflet-ant-path';
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds"] }] */
-/* eslint-disable no-extra-bind */ 
+/* eslint-disable no-extra-bind */
 import Colors from './colors';
 
 
