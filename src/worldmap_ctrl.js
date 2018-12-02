@@ -18,6 +18,7 @@ const panelDefaults = {
   valueName: 'total',
   circleMinSize: 2,
   circleMaxSize: 30,
+  boundsChangeTriggerDelta: 0.5,
   locationData: 'countries',
   thresholds: '0,10',
   colors: ['rgba(245, 54, 54, 0.9)', 'rgba(237, 129, 40, 0.89)', 'rgba(50, 172, 45, 0.97)'],
@@ -32,6 +33,7 @@ const panelDefaults = {
   antPathColor: 'rgba(50, 172, 45, 0.97)',
   antPathPulseColor: '#FFFFFF',
   extraLineColors: ['#ff4d4d', '#1aff8c'],
+  extraLineSecondaryColors: ['#eeeeee', '#eeeeee'],
   mapTileServer: 'CartoDB',
   esMetric: 'Count',
   decimals: 0,
@@ -61,6 +63,7 @@ const mapCenters = {
 export default class WorldmapCtrl extends MetricsPanelCtrl {
   currentTileServer;
   context;
+
   constructor($scope, $injector, contextSrv, datasourceSrv, variableSrv) {
     super($scope, $injector);
     this.context = contextSrv;
@@ -103,6 +106,12 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
         break;
     }
     this.setMapSaturationClass();
+  }
+
+  changeBoundsChangeTriggerDelta() {
+    if (this.panel.boundsChangeTriggerDelta < 0 || this.panel.boundsChangeTriggerDelta > 3) {
+      this.panel.boundsChangeTriggerDelta = 0.5;
+    }
   }
 
   changeMapProvider() {
@@ -289,18 +298,26 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
 
   addExtraLineColor() {
     this.panel.extraLineColors.push(Colors.random());
+    this.panel.extraLineSecondaryColors.push(Colors.random());
     this.render();
   }
 
   removeLastExtraLineColor() {
     if (this.panel.extraLineColors.length > 0) {
-      this.panel.extraLineColors.pop();
+      const removed = this.panel.extraLineColors.pop();
+      if (removed && this.panel.extraLineSecondaryColors.length > 0) {
+        this.panel.extraLineSecondaryColors.pop();
+      }
       this.render();
     }
   }
 
   changeExtraLineColors() {
     this.map.setExtraLineColors(this.panel.extraLineColors);
+  }
+
+  changeExtraLineSecondaryColors() {
+    this.map.setExtraLineSecondaryColors(this.panel.extraLineSecondaryColors);
   }
 
   changeThresholds() {
@@ -336,6 +353,10 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   onBoundsChange(boundsObj) {
+    if (boundsObj.maxChangeDelta < 0.5) {
+      console.log('bounds change delta %o is too small to update variable', boundsObj.maxChangeDelta);
+      return;
+    }
     const boundsJson = JSON.stringify(boundsObj);
     const boundsVar = _.find(this.variableSrv.variables, (check) => {
       return check.name === 'bounds';

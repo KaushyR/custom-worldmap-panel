@@ -66,7 +66,8 @@ export default class WorldMap {
     this.antPathColor = this.ctrl.panel.antPathColor;
     this.antPathPulseColor = this.ctrl.panel.antPathPulseColor;
     this.extraLineColors = this.ctrl.panel.extraLineColors;
-
+    this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
+    this.lastBounds = null;
     this.showAsAntPath = true;
     return this.createMap();
   }
@@ -143,12 +144,7 @@ export default class WorldMap {
       this.createCircles(data);
       this.clearPolyLine();
       if (this.drawTrail) {
-        const linesLayer = this.drawPolyLine();
         const extraLineLayers = this.drawExtraLines();
-        const combined = Array.from(extraLineLayers);
-        combined.push(linesLayer);
-        const group = window.L.featureGroup(combined);
-        this.map.fitBounds(group.getBounds());
       }
     } else {
       this.updateCircles(data);
@@ -181,6 +177,9 @@ export default class WorldMap {
     }
     if (this.markerLayers) {
       this.markerLayers.forEach((layer) => {
+        if (layer.getPopup()) {
+          layer.unbindPopup();
+        }
         this.removeLines(layer);
       });
     }
@@ -201,8 +200,22 @@ export default class WorldMap {
     dataset.forEach((dataPoint) => {
       if (dataPoint.marker) {
         const marker = window.L.marker([dataPoint.locationLatitude, dataPoint.locationLongitude], {
-          title: dataPoint.marker
+          title: dataPoint.marker,
+          draggable: false,
         }).addTo(this.map);
+        const popup = window.L.popup().setContent('<b style="color: #666666">' + dataPoint.marker + '</b>');
+        marker.bindPopup(popup);
+        marker.on('click', (evt) => {
+          if (marker.isPopupOpen() === false) {
+            marker.openPopup();
+          }
+        });
+        marker.on('mouseover', (evt) => {
+          if (marker.isPopupOpen() === false) {
+            marker.openPopup();
+          }
+        });
+
         self.markerLayers.push(marker);
       }
     });
@@ -218,9 +231,25 @@ export default class WorldMap {
     for (let dataIdx = 1; dataIdx < this.ctrl.data.length; dataIdx += 1) {
       const lineColor = (this.extraLineColors && this.extraLineColors.length >= dataIdx)
         ? this.extraLineColors[dataIdx - 1] : Colors.random();
-      const layer = window.L.polyline(self.toCoords(this.ctrl.data[dataIdx]), {
-        color: lineColor
-      }).addTo(this.map);
+      const secondaryLineColor = (this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx)
+        ? this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
+      let layer = null;
+
+      if (this.showAsAntPath) {
+        layer = window.L.polyline.antPath(self.toCoords(this.ctrl.data[dataIdx]), {
+          'delay': this.antPathDelay,
+          'dashArray': [10, 20],
+          'weight': 5,
+          'color': lineColor,
+          'pulseColor': (this.useCustomAntPathColor ? this.secondaryLineColor : '#FFFFFF'),
+          'paused': false,
+          'reverse': false
+        }).addTo(this.map);
+      } else {
+        layer = window.L.polyline(self.toCoords(this.ctrl.data[dataIdx]), {
+          color: lineColor
+        }).addTo(this.map);
+      }
       this.extraLineLayers.push(layer);
       self.drawMarkers(this.ctrl.data[dataIdx]);
       return this.extraLineLayers;
@@ -377,6 +406,10 @@ export default class WorldMap {
     this.extraLineColors = colors;
   }
 
+  setExtraLineSecondaryColors(colors) {
+    this.extraLineSecondaryColors = colors;
+  }
+
   setShowAsAntPath(flag) {
     this.showAsAntPath = flag;
   }
@@ -417,12 +450,39 @@ export default class WorldMap {
     if (!bounds) {
       return {};
     }
+    const maxChangeDelta = this.calculateMaxChangeDelta(bounds);
+
     return {
       nortWest: { lat: bounds.getNorthWest().lat, lng: bounds.getNorthWest().lng},
       northEast: { lat: bounds.getNorthEast().lat, lng: bounds.getNorthEast().lng},
       southEast: { lat: bounds.getSouthEast().lat, lng: bounds.getSouthEast().lng},
       southWest: { lat: bounds.getSouthWest().lat, lng: bounds.getSouthWest().lng},
-      triggeredBy: trigger
+      triggeredBy: trigger,
+      maxChangeDelta: maxChangeDelta
     };
+  }
+
+  calculateMaxChangeDelta(bounds) {
+    let maxChangeDelta = 0;
+    if (this.lastBounds) {
+      const nwDist = window.L.CRS.Simple.distance(bounds.getNorthWest(), this.lastBounds.getNorthWest());
+      if (nwDist > maxChangeDelta) {
+        maxChangeDelta = nwDist;
+      }
+      const neDist = window.L.CRS.Simple.distance(bounds.getNorthEast(), this.lastBounds.getNorthEast());
+      if (neDist > maxChangeDelta) {
+        maxChangeDelta = neDist;
+      }
+      const seDist = window.L.CRS.Simple.distance(bounds.getSouthEast(), this.lastBounds.getSouthEast());
+      if (seDist > maxChangeDelta) {
+        maxChangeDelta = seDist;
+      }
+      const swDist = window.L.CRS.Simple.distance(bounds.getSouthWest(), this.lastBounds.getSouthWest());
+      if (swDist > maxChangeDelta) {
+        maxChangeDelta = swDist;
+      }
+      return maxChangeDelta;
+    }
+    this.lastBounds = bounds;
   }
 }

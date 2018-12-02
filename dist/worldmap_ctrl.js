@@ -79,6 +79,7 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
         valueName: 'total',
         circleMinSize: 2,
         circleMaxSize: 30,
+        boundsChangeTriggerDelta: 0.5,
         locationData: 'countries',
         thresholds: '0,10',
         colors: ['rgba(245, 54, 54, 0.9)', 'rgba(237, 129, 40, 0.89)', 'rgba(50, 172, 45, 0.97)'],
@@ -93,6 +94,7 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
         antPathColor: 'rgba(50, 172, 45, 0.97)',
         antPathPulseColor: '#FFFFFF',
         extraLineColors: ['#ff4d4d', '#1aff8c'],
+        extraLineSecondaryColors: ['#eeeeee', '#eeeeee'],
         mapTileServer: 'CartoDB',
         esMetric: 'Count',
         decimals: 0,
@@ -169,6 +171,13 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
                 break;
             }
             this.setMapSaturationClass();
+          }
+        }, {
+          key: 'changeBoundsChangeTriggerDelta',
+          value: function changeBoundsChangeTriggerDelta() {
+            if (this.panel.boundsChangeTriggerDelta < 0 || this.panel.boundsChangeTriggerDelta > 3) {
+              this.panel.boundsChangeTriggerDelta = 0.5;
+            }
           }
         }, {
           key: 'changeMapProvider',
@@ -374,13 +383,17 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
           key: 'addExtraLineColor',
           value: function addExtraLineColor() {
             this.panel.extraLineColors.push(Colors.random());
+            this.panel.extraLineSecondaryColors.push(Colors.random());
             this.render();
           }
         }, {
           key: 'removeLastExtraLineColor',
           value: function removeLastExtraLineColor() {
             if (this.panel.extraLineColors.length > 0) {
-              this.panel.extraLineColors.pop();
+              var removed = this.panel.extraLineColors.pop();
+              if (removed && this.panel.extraLineSecondaryColors.length > 0) {
+                this.panel.extraLineSecondaryColors.pop();
+              }
               this.render();
             }
           }
@@ -388,6 +401,11 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
           key: 'changeExtraLineColors',
           value: function changeExtraLineColors() {
             this.map.setExtraLineColors(this.panel.extraLineColors);
+          }
+        }, {
+          key: 'changeExtraLineSecondaryColors',
+          value: function changeExtraLineSecondaryColors() {
+            this.map.setExtraLineSecondaryColors(this.panel.extraLineSecondaryColors);
           }
         }, {
           key: 'changeThresholds',
@@ -427,6 +445,10 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
         }, {
           key: 'onBoundsChange',
           value: function onBoundsChange(boundsObj) {
+            if (boundsObj.maxChangeDelta < 0.5) {
+              console.log('bounds change delta %o is too small to update variable', boundsObj.maxChangeDelta);
+              return;
+            }
             var boundsJson = JSON.stringify(boundsObj);
             var boundsVar = _.find(this.variableSrv.variables, function (check) {
               return check.name === 'bounds';

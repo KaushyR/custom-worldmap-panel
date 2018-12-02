@@ -123,7 +123,8 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
           this.antPathColor = this.ctrl.panel.antPathColor;
           this.antPathPulseColor = this.ctrl.panel.antPathPulseColor;
           this.extraLineColors = this.ctrl.panel.extraLineColors;
-
+          this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
+          this.lastBounds = null;
           this.showAsAntPath = true;
           return this.createMap();
         }
@@ -210,12 +211,7 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
               this.createCircles(data);
               this.clearPolyLine();
               if (this.drawTrail) {
-                var linesLayer = this.drawPolyLine();
                 var extraLineLayers = this.drawExtraLines();
-                var combined = Array.from(extraLineLayers);
-                combined.push(linesLayer);
-                var group = window.L.featureGroup(combined);
-                this.map.fitBounds(group.getBounds());
               }
             } else {
               this.updateCircles(data);
@@ -254,6 +250,9 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             }
             if (this.markerLayers) {
               this.markerLayers.forEach(function (layer) {
+                if (layer.getPopup()) {
+                  layer.unbindPopup();
+                }
                 _this5.removeLines(layer);
               });
             }
@@ -278,8 +277,22 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             dataset.forEach(function (dataPoint) {
               if (dataPoint.marker) {
                 var marker = window.L.marker([dataPoint.locationLatitude, dataPoint.locationLongitude], {
-                  title: dataPoint.marker
+                  title: dataPoint.marker,
+                  draggable: false
                 }).addTo(_this6.map);
+                var popup = window.L.popup().setContent('<b style="color: #666666">' + dataPoint.marker + '</b>');
+                marker.bindPopup(popup);
+                marker.on('click', function (evt) {
+                  if (marker.isPopupOpen() === false) {
+                    marker.openPopup();
+                  }
+                });
+                marker.on('mouseover', function (evt) {
+                  if (marker.isPopupOpen() === false) {
+                    marker.openPopup();
+                  }
+                });
+
                 self.markerLayers.push(marker);
               }
             });
@@ -295,9 +308,24 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
 
             for (var dataIdx = 1; dataIdx < this.ctrl.data.length; dataIdx += 1) {
               var lineColor = this.extraLineColors && this.extraLineColors.length >= dataIdx ? this.extraLineColors[dataIdx - 1] : Colors.random();
-              var layer = window.L.polyline(self.toCoords(this.ctrl.data[dataIdx]), {
-                color: lineColor
-              }).addTo(this.map);
+              var secondaryLineColor = this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx ? this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
+              var layer = null;
+
+              if (this.showAsAntPath) {
+                layer = window.L.polyline.antPath(self.toCoords(this.ctrl.data[dataIdx]), {
+                  'delay': this.antPathDelay,
+                  'dashArray': [10, 20],
+                  'weight': 5,
+                  'color': lineColor,
+                  'pulseColor': this.useCustomAntPathColor ? this.secondaryLineColor : '#FFFFFF',
+                  'paused': false,
+                  'reverse': false
+                }).addTo(this.map);
+              } else {
+                layer = window.L.polyline(self.toCoords(this.ctrl.data[dataIdx]), {
+                  color: lineColor
+                }).addTo(this.map);
+              }
               this.extraLineLayers.push(layer);
               self.drawMarkers(this.ctrl.data[dataIdx]);
               return this.extraLineLayers;
@@ -475,6 +503,11 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             this.extraLineColors = colors;
           }
         }, {
+          key: 'setExtraLineSecondaryColors',
+          value: function setExtraLineSecondaryColors(colors) {
+            this.extraLineSecondaryColors = colors;
+          }
+        }, {
           key: 'setShowAsAntPath',
           value: function setShowAsAntPath(flag) {
             this.showAsAntPath = flag;
@@ -498,13 +531,41 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             if (!bounds) {
               return {};
             }
+            var maxChangeDelta = this.calculateMaxChangeDelta(bounds);
+
             return {
               nortWest: { lat: bounds.getNorthWest().lat, lng: bounds.getNorthWest().lng },
               northEast: { lat: bounds.getNorthEast().lat, lng: bounds.getNorthEast().lng },
               southEast: { lat: bounds.getSouthEast().lat, lng: bounds.getSouthEast().lng },
               southWest: { lat: bounds.getSouthWest().lat, lng: bounds.getSouthWest().lng },
-              triggeredBy: trigger
+              triggeredBy: trigger,
+              maxChangeDelta: maxChangeDelta
             };
+          }
+        }, {
+          key: 'calculateMaxChangeDelta',
+          value: function calculateMaxChangeDelta(bounds) {
+            var maxChangeDelta = 0;
+            if (this.lastBounds) {
+              var nwDist = window.L.CRS.Simple.distance(bounds.getNorthWest(), this.lastBounds.getNorthWest());
+              if (nwDist > maxChangeDelta) {
+                maxChangeDelta = nwDist;
+              }
+              var neDist = window.L.CRS.Simple.distance(bounds.getNorthEast(), this.lastBounds.getNorthEast());
+              if (neDist > maxChangeDelta) {
+                maxChangeDelta = neDist;
+              }
+              var seDist = window.L.CRS.Simple.distance(bounds.getSouthEast(), this.lastBounds.getSouthEast());
+              if (seDist > maxChangeDelta) {
+                maxChangeDelta = seDist;
+              }
+              var swDist = window.L.CRS.Simple.distance(bounds.getSouthWest(), this.lastBounds.getSouthWest());
+              if (swDist > maxChangeDelta) {
+                maxChangeDelta = swDist;
+              }
+              return maxChangeDelta;
+            }
+            this.lastBounds = bounds;
           }
         }]);
 
