@@ -194,13 +194,14 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   onDataReceived(dataList) {
+    console.log('onDataReceived dataList = %o', dataList);
+
     if (!dataList) return;
 
     if (this.dashboard.snapshot && this.locations) {
       this.panel.snapshotLocationData = this.locations;
     }
 
-    console.log('onDataReceived dataList = %o', dataList);
     const data = [];
 
     if (this.panel.locationData === 'geohash') {
