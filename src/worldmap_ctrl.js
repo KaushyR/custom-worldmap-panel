@@ -200,6 +200,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
       this.panel.snapshotLocationData = this.locations;
     }
 
+    console.log('onDataReceived dataList = %o', dataList);
     const data = [];
 
     if (this.panel.locationData === 'geohash') {
