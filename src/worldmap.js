@@ -224,6 +224,7 @@ export default class WorldMap {
 
   drawExtraLines() {
     const self = this;
+    console.log('drawExtraLines %o', this.ctrl.data.length);
     if (!this.ctrl.data || this.ctrl.data.length < 1) {
       return;
     }
@@ -234,7 +235,7 @@ export default class WorldMap {
       const secondaryLineColor = (this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx)
         ? this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
       let layer = null;
-
+      console.log('data = %o', this.ctrl.data[dataIdx]);
       if (this.showAsAntPath) {
         layer = window.L.polyline.antPath(self.toCoords(this.ctrl.data[dataIdx]), {
           'delay': this.antPathDelay,
