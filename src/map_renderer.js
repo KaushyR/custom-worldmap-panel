@@ -8,6 +8,7 @@ export default function link(scope, elem, attrs, ctrl) {
   });
 
   function render() {
+    console.log('render %o', ctrl.data);
     if (!ctrl.data) return;
 
     const mapContainer = elem.find('.mapcontainer');

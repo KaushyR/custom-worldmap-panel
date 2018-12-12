@@ -62,6 +62,7 @@ export default class DataFormatter {
   }
 
   setGeohashValues(dataList, data) {
+    console.log('setGeohashValues %o', dataList);
     if (!this.ctrl.panel.esGeoPoint || !this.ctrl.panel.esMetric) return;
 
     if (dataList && dataList.length > 0) {
@@ -109,6 +110,7 @@ export default class DataFormatter {
           data.valueRange = highestValue - lowestValue;
         }
       });
+      console.log('Data %o', data);
     }
   }
 
