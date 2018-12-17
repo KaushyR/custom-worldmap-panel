@@ -254,8 +254,9 @@ export default class WorldMap {
       }
       this.extraLineLayers.push(layer);
       self.drawMarkers(this.ctrl.data[dataIdx]);
-      return this.extraLineLayers;
     }
+
+    return this.extraLineLayers;
   }
 
   drawPolyLine() {
