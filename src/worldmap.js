@@ -235,14 +235,15 @@ export default class WorldMap {
       const secondaryLineColor = (this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx)
         ? this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
       let layer = null;
-      console.log('data = %o', this.ctrl.data[dataIdx]);
+      console.log('draw line %o %o', dataIdx, this.showAsAntPath);
+      console.log('data =%o', this.ctrl.data[dataIdx]);
       if (this.showAsAntPath) {
         layer = window.L.polyline.antPath(self.toCoords(this.ctrl.data[dataIdx]), {
           'delay': this.antPathDelay,
           'dashArray': [10, 20],
           'weight': 5,
           'color': lineColor,
-          'pulseColor': (this.useCustomAntPathColor ? this.secondaryLineColor : '#FFFFFF'),
+          'pulseColor': (this.useCustomAntPathColor ? secondaryLineColor : '#FFFFFF'),
           'paused': false,
           'reverse': false
         }).addTo(this.map);
