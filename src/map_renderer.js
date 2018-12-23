@@ -8,7 +8,6 @@ export default function link(scope, elem, attrs, ctrl) {
   });
 
   function render() {
-    console.log('render %o', ctrl.data);
     if (!ctrl.data) return;
 
     const mapContainer = elem.find('.mapcontainer');
@@ -21,6 +20,7 @@ export default function link(scope, elem, attrs, ctrl) {
       ctrl.map = new WorldMap(ctrl, mapContainer[0]);
     }
 
+    ctrl.map.focus();
     ctrl.map.resize();
 
     if (ctrl.mapCenterMoved) ctrl.map.panToMapCenter();

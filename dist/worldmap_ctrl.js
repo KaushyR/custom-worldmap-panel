@@ -209,6 +209,8 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
 
             if (this.map && !reload) return;
 
+            console.log('loadDataFromFile');
+
             if (this.panel.snapshotLocationData) {
               this.locations = this.panel.snapshotLocationData;
               return;
