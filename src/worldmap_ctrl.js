@@ -46,7 +46,8 @@ const panelDefaults = {
     latitudeField: 'latitude',
     longitudeField: 'longitude',
     metricField: 'metric',
-    markerField: 'marker'
+    markerField: 'marker',
+    urlField: 'url'
   }
 
 };
@@ -137,8 +138,6 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
 
   loadLocationDataFromFile(reload) {
     if (this.map && !reload) return;
-
-    console.log('loadDataFromFile');
 
     if (this.panel.snapshotLocationData) {
       this.locations = this.panel.snapshotLocationData;

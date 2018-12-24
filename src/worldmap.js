@@ -309,6 +309,9 @@ export default class WorldMap {
       fillOpacity: 0.5,
       location: dataPoint.key
     });
+    if (dataPoint.url) {
+      circle.on('click', () => { window.location.replace(dataPoint.url); });
+    }
 
     this.createPopup(circle, dataPoint.locationName, dataPoint.valueRounded);
     return circle;
