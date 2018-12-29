@@ -198,6 +198,8 @@ System.register(['lodash', './geohash'], function (_export, _context) {
                     locationLatitude: latitude,
                     locationLongitude: longitude,
                     marker: datapoint[_this3.ctrl.panel.tableQueryOptions.markerField],
+                    url: datapoint[_this3.ctrl.panel.tableQueryOptions.urlField],
+                    label: datapoint[_this3.ctrl.panel.tableQueryOptions.customLabelField],
                     value: datapoint[_this3.ctrl.panel.tableQueryOptions.metricField],
                     valueFormatted: datapoint[_this3.ctrl.panel.tableQueryOptions.metricField],
                     valueRounded: 0

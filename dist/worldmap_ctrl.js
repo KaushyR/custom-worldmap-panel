@@ -107,7 +107,9 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
           latitudeField: 'latitude',
           longitudeField: 'longitude',
           metricField: 'metric',
-          markerField: 'marker'
+          markerField: 'marker',
+          customLabelField: 'label',
+          urlField: 'url'
         }
 
       };
@@ -208,8 +210,6 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
             var _this2 = this;
 
             if (this.map && !reload) return;
-
-            console.log('loadDataFromFile');
 
             if (this.panel.snapshotLocationData) {
               this.locations = this.panel.snapshotLocationData;
