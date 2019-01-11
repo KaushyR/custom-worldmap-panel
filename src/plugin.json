@@ -1,10 +1,10 @@
 {
   "type": "panel",
-  "name": "Custom Worldmap Panel",
-  "id": "grafana-custom-worldmap-panel",
+  "name": "Advanced Worldmap Panel",
+  "id": "grafana-advanced-worldmap-panel",
 
   "info": {
-    "description": "Custom World Map panel based on World Map panel for Grafana. Displays time series data or geohash data from Elasticsearch overlaid on a world map.",
+    "description": "Advanced World Map panel based on World Map panel for Grafana. Displays time series data or geohash data from Elasticsearch overlaid on a world map.",
     "author": {
       "name": "Grafana Labs, Ravith Botejue, Kaushalya Rathnayake",
       "url": "https://grafana.com"
@@ -23,7 +23,7 @@
       {"name": "USA", "path": "images/worldmap-usa.png"},
       {"name": "Light Theme", "path": "images/worldmap-light-theme.png"}
     ],
-    "version": "1.8.8",
+    "version": "1.8.9",
     "updated": "2018-12-23"
   },
 
