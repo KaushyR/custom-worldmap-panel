@@ -10,8 +10,8 @@ module.exports = (grunt) => {
 
     clean: {
       build: ['dist/*'],
-      tmp: ['custom-worldmap*'],
-      release: ['custom-worldmap*.zip']
+      tmp: ['advanced-worldmap*'],
+      release: ['advanced-worldmap*.zip']
     },
 
     copy: {
@@ -36,8 +36,8 @@ module.exports = (grunt) => {
       dist_to_tmp: {
         cwd: './',
         expand: true,
-        src: ['**/*', '!**/node_modules/**', '!**/custom-worldmap*.zip'],
-        dest: 'custom-worldmap'
+        src: ['**/*', '!**/node_modules/**', '!**/advanced-worldmap*.zip'],
+        dest: 'advanced-worldmap'
       },
     },
 

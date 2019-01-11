@@ -1,5 +1,5 @@
 dist/*
-custom-worldmap/*
-custom-worldmap-*/*
+advanced-worldmap/*
+advanced-worldmap-*/*
 src/libs/leaflet.js
 src/libs/leaflet-ant-path.js
