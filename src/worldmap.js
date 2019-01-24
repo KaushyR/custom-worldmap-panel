@@ -390,8 +390,10 @@ export default class WorldMap {
   }
 
   removeLegend() {
-    this.legend.remove(this.map);
-    this.legend = null;
+    if (this.map && this.isMapReady && this.map.getContainer()) {
+      this.legend.remove(this.map);
+      this.legend = null;
+    }
   }
 
   setMouseWheelZoom() {
