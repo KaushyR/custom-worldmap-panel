@@ -122,9 +122,13 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   changeMapProvider() {
     if (this.panel.mapTileServer !== this.currentTileServer) {
       this.setMapProvider(this.context);
-      if (this.map) {
-        this.map.remove();
-        this.map = null;
+      try {
+        if (this.map) {
+          this.map.remove();
+          this.map = null;
+        }
+      } catch (ex) {
+        console.log(ex);
       }
 
       this.currentTileServer = this.tileServer;

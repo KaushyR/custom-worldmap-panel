@@ -189,9 +189,13 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
           value: function changeMapProvider() {
             if (this.panel.mapTileServer !== this.currentTileServer) {
               this.setMapProvider(this.context);
-              if (this.map) {
-                this.map.remove();
-                this.map = null;
+              try {
+                if (this.map) {
+                  this.map.remove();
+                  this.map = null;
+                }
+              } catch (ex) {
+                console.log(ex);
               }
 
               this.currentTileServer = this.tileServer;

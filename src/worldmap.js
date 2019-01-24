@@ -2,7 +2,9 @@ import _ from 'lodash';
 /* eslint-disable id-length, no-unused-vars */
 import L from './libs/leaflet';
 /* eslint-disable id-length, no-unused-vars */
-import {antPath} from './libs/leaflet-ant-path';
+import {
+  antPath
+} from './libs/leaflet-ant-path';
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds"] }] */
 /* eslint-disable no-extra-bind */
 import Colors from './colors';
@@ -74,9 +76,13 @@ export default class WorldMap {
   }
 
   createMap() {
-    window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
+    window.L.Icon.Default.imagePath = 'public/plugins/grafana-advanced-worldmap-panel/images/';
     const mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
-    this.map = window.L.map(this.mapContainer, { worldCopyJump: true, center: mapCenter, zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1 });
+    this.map = window.L.map(this.mapContainer, {
+      worldCopyJump: true,
+      center: mapCenter,
+      zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1
+    });
     this.setMouseWheelZoom();
 
     const selectedTileServer = tileServers[this.ctrl.tileServer];
@@ -98,7 +104,9 @@ export default class WorldMap {
   }
 
   createLegend() {
-    this.legend = window.L.control({position: 'bottomleft'});
+    this.legend = window.L.control({
+      position: 'bottomleft'
+    });
     this.legend.onAdd = () => {
       this.legend._div = window.L.DomUtil.create('div', 'info legend');
       this.legend.update();
@@ -106,10 +114,13 @@ export default class WorldMap {
     };
 
     this.legend.update = () => {
+      if (!this.ctrl.data || this.ctrl.data.length === 0 || !this.ctrl.data[0].thresholds) {
+        return;
+      }
       const thresholds = this.ctrl.data[0].thresholds;
       let legendHtml = '';
       legendHtml += '<div class="legend-item"><i style="background:' + this.ctrl.panel.colors[0] + '"></i> ' +
-          '&lt; ' + thresholds[0] + '</div>';
+        '&lt; ' + thresholds[0] + '</div>';
       for (let index = 0; index < thresholds.length; index += 1) {
         legendHtml +=
           '<div class="legend-item"><i style="background:' + this.ctrl.panel.colors[index + 1] + '"></i> ' +
@@ -130,7 +141,9 @@ export default class WorldMap {
   }
 
   filterEmptyAndZeroValues(data) {
-    return _.filter(data, (o) => { return !(this.ctrl.panel.hideEmpty && _.isNil(o.value)) && !(this.ctrl.panel.hideZero && o.value === 0); });
+    return _.filter(data, (o) => {
+      return !(this.ctrl.panel.hideEmpty && _.isNil(o.value)) && !(this.ctrl.panel.hideZero && o.value === 0);
+    });
   }
 
   clearCircles() {
@@ -240,10 +253,10 @@ export default class WorldMap {
     }
 
     for (let dataIdx = 1; dataIdx < this.ctrl.data.length; dataIdx += 1) {
-      const lineColor = (this.extraLineColors && this.extraLineColors.length >= dataIdx)
-        ? this.extraLineColors[dataIdx - 1] : Colors.random();
-      const secondaryLineColor = (this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx)
-        ? this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
+      const lineColor = (this.extraLineColors && this.extraLineColors.length >= dataIdx) ?
+        this.extraLineColors[dataIdx - 1] : Colors.random();
+      const secondaryLineColor = (this.extraLineSecondaryColors && this.extraLineSecondaryColors.length >= dataIdx) ?
+        this.extraLineSecondaryColors[dataIdx - 1] : Colors.random();
       let layer = null;
 
       if (this.showAsAntPath) {
@@ -290,7 +303,9 @@ export default class WorldMap {
     data.forEach((dataPoint) => {
       if (!dataPoint.locationName) return;
 
-      const circle = _.find(this.circles, (cir) => { return cir.options.location === dataPoint.key; });
+      const circle = _.find(this.circles, (cir) => {
+        return cir.options.location === dataPoint.key;
+      });
 
       if (circle) {
         circle.setRadius(this.calcCircleSize(dataPoint.value || 0));
@@ -321,9 +336,13 @@ export default class WorldMap {
         if (this.ctrl.panel.urlFollowOptions.useHeadlessWindow) {
           specs = 'menubar=0,resizable=1,location=0,titlebar=0,toolbar=0';
         }
-        circle.on('click', () => { window.open(dataPoint.url, name, specs); });
+        circle.on('click', () => {
+          window.open(dataPoint.url, name, specs);
+        });
       } else {
-        circle.on('click', () => { window.location.replace(dataPoint.url); });
+        circle.on('click', () => {
+          window.location.replace(dataPoint.url);
+        });
       }
     }
 
@@ -354,7 +373,11 @@ export default class WorldMap {
   }
 
   createPopup(circle, label) {
-    circle.bindPopup(label, {'offset': window.L.point(0, -2), 'className': 'worldmap-popup', 'closeButton': this.ctrl.panel.stickyLabels});
+    circle.bindPopup(label, {
+      'offset': window.L.point(0, -2),
+      'className': 'worldmap-popup',
+      'closeButton': this.ctrl.panel.stickyLabels
+    });
 
     circle.on('mouseover', function onMouseOver(evt) {
       const layer = evt.target;
@@ -486,10 +509,22 @@ export default class WorldMap {
     const maxChangeDelta = this.calculateMaxChangeDelta(bounds);
 
     return {
-      nortWest: { lat: bounds.getNorthWest().lat, lng: bounds.getNorthWest().lng},
-      northEast: { lat: bounds.getNorthEast().lat, lng: bounds.getNorthEast().lng},
-      southEast: { lat: bounds.getSouthEast().lat, lng: bounds.getSouthEast().lng},
-      southWest: { lat: bounds.getSouthWest().lat, lng: bounds.getSouthWest().lng},
+      nortWest: {
+        lat: bounds.getNorthWest().lat,
+        lng: bounds.getNorthWest().lng
+      },
+      northEast: {
+        lat: bounds.getNorthEast().lat,
+        lng: bounds.getNorthEast().lng
+      },
+      southEast: {
+        lat: bounds.getSouthEast().lat,
+        lng: bounds.getSouthEast().lng
+      },
+      southWest: {
+        lat: bounds.getSouthWest().lat,
+        lng: bounds.getSouthWest().lng
+      },
       triggeredBy: trigger,
       maxChangeDelta: maxChangeDelta
     };

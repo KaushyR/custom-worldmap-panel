@@ -135,9 +135,13 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
           value: function createMap() {
             var _this2 = this;
 
-            window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
+            window.L.Icon.Default.imagePath = 'public/plugins/grafana-advanced-worldmap-panel/images/';
             var mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
-            this.map = window.L.map(this.mapContainer, { worldCopyJump: true, center: mapCenter, zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1 });
+            this.map = window.L.map(this.mapContainer, {
+              worldCopyJump: true,
+              center: mapCenter,
+              zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1
+            });
             this.setMouseWheelZoom();
 
             var selectedTileServer = tileServers[this.ctrl.tileServer];
@@ -162,7 +166,9 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
           value: function createLegend() {
             var _this3 = this;
 
-            this.legend = window.L.control({ position: 'bottomleft' });
+            this.legend = window.L.control({
+              position: 'bottomleft'
+            });
             this.legend.onAdd = function () {
               _this3.legend._div = window.L.DomUtil.create('div', 'info legend');
               _this3.legend.update();
@@ -170,6 +176,9 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             };
 
             this.legend.update = function () {
+              if (!_this3.ctrl.data || _this3.ctrl.data.length === 0 || !_this3.ctrl.data[0].thresholds) {
+                return;
+              }
               var thresholds = _this3.ctrl.data[0].thresholds;
               var legendHtml = '';
               legendHtml += '<div class="legend-item"><i style="background:' + _this3.ctrl.panel.colors[0] + '"></i> ' + '&lt; ' + thresholds[0] + '</div>';
@@ -446,7 +455,11 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'createPopup',
           value: function createPopup(circle, label) {
-            circle.bindPopup(label, { 'offset': window.L.point(0, -2), 'className': 'worldmap-popup', 'closeButton': this.ctrl.panel.stickyLabels });
+            circle.bindPopup(label, {
+              'offset': window.L.point(0, -2),
+              'className': 'worldmap-popup',
+              'closeButton': this.ctrl.panel.stickyLabels
+            });
 
             circle.on('mouseover', function onMouseOver(evt) {
               var layer = evt.target;
@@ -486,8 +499,10 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'removeLegend',
           value: function removeLegend() {
-            this.legend.remove(this.map);
-            this.legend = null;
+            if (this.map && this.isMapReady && this.map.getContainer()) {
+              this.legend.remove(this.map);
+              this.legend = null;
+            }
           }
         }, {
           key: 'setMouseWheelZoom',
@@ -572,10 +587,22 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             var maxChangeDelta = this.calculateMaxChangeDelta(bounds);
 
             return {
-              nortWest: { lat: bounds.getNorthWest().lat, lng: bounds.getNorthWest().lng },
-              northEast: { lat: bounds.getNorthEast().lat, lng: bounds.getNorthEast().lng },
-              southEast: { lat: bounds.getSouthEast().lat, lng: bounds.getSouthEast().lng },
-              southWest: { lat: bounds.getSouthWest().lat, lng: bounds.getSouthWest().lng },
+              nortWest: {
+                lat: bounds.getNorthWest().lat,
+                lng: bounds.getNorthWest().lng
+              },
+              northEast: {
+                lat: bounds.getNorthEast().lat,
+                lng: bounds.getNorthEast().lng
+              },
+              southEast: {
+                lat: bounds.getSouthEast().lat,
+                lng: bounds.getSouthEast().lng
+              },
+              southWest: {
+                lat: bounds.getSouthWest().lat,
+                lng: bounds.getSouthWest().lng
+              },
               triggeredBy: trigger,
               maxChangeDelta: maxChangeDelta
             };
