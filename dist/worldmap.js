@@ -126,12 +126,15 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
           this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
           this.lastBounds = null;
           this.showAsAntPath = true;
+          this.isMapReady = false;
           return this.createMap();
         }
 
         _createClass(WorldMap, [{
           key: 'createMap',
           value: function createMap() {
+            var _this2 = this;
+
             window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
             var mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
             this.map = window.L.map(this.mapContainer, { worldCopyJump: true, center: mapCenter, zoom: parseInt(this.ctrl.panel.initialZoom, 10) || 1 });
@@ -149,27 +152,31 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
             this.map.on('zoomend', this.onZoom);
             this.map.on('moveend', this.onZoom);
             this.map.on('resize', this.onResize);
+
+            this.map.whenReady(function () {
+              _this2.isMapReady = true;
+            });
           }
         }, {
           key: 'createLegend',
           value: function createLegend() {
-            var _this2 = this;
+            var _this3 = this;
 
             this.legend = window.L.control({ position: 'bottomleft' });
             this.legend.onAdd = function () {
-              _this2.legend._div = window.L.DomUtil.create('div', 'info legend');
-              _this2.legend.update();
-              return _this2.legend._div;
+              _this3.legend._div = window.L.DomUtil.create('div', 'info legend');
+              _this3.legend.update();
+              return _this3.legend._div;
             };
 
             this.legend.update = function () {
-              var thresholds = _this2.ctrl.data[0].thresholds;
+              var thresholds = _this3.ctrl.data[0].thresholds;
               var legendHtml = '';
-              legendHtml += '<div class="legend-item"><i style="background:' + _this2.ctrl.panel.colors[0] + '"></i> ' + '&lt; ' + thresholds[0] + '</div>';
+              legendHtml += '<div class="legend-item"><i style="background:' + _this3.ctrl.panel.colors[0] + '"></i> ' + '&lt; ' + thresholds[0] + '</div>';
               for (var index = 0; index < thresholds.length; index += 1) {
-                legendHtml += '<div class="legend-item"><i style="background:' + _this2.ctrl.panel.colors[index + 1] + '"></i> ' + thresholds[index] + (thresholds[index + 1] ? '&ndash;' + thresholds[index + 1] + '</div>' : '+');
+                legendHtml += '<div class="legend-item"><i style="background:' + _this3.ctrl.panel.colors[index + 1] + '"></i> ' + thresholds[index] + (thresholds[index + 1] ? '&ndash;' + thresholds[index + 1] + '</div>' : '+');
               }
-              _this2.legend._div.innerHTML = legendHtml;
+              _this3.legend._div.innerHTML = legendHtml;
             };
             this.legend.addTo(this.map);
           }
@@ -186,10 +193,10 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'filterEmptyAndZeroValues',
           value: function filterEmptyAndZeroValues(data) {
-            var _this3 = this;
+            var _this4 = this;
 
             return _.filter(data, function (o) {
-              return !(_this3.ctrl.panel.hideEmpty && _.isNil(o.value)) && !(_this3.ctrl.panel.hideZero && o.value === 0);
+              return !(_this4.ctrl.panel.hideEmpty && _.isNil(o.value)) && !(_this4.ctrl.panel.hideZero && o.value === 0);
             });
           }
         }, {
@@ -227,15 +234,15 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'createCircles',
           value: function createCircles(data) {
-            var _this4 = this;
+            var _this5 = this;
 
             var circles = [];
             data.forEach(function (dataPoint) {
               if (!dataPoint.locationName) return;
-              var c = _this4.createCircle(dataPoint);
-              _this4.lineColor = _this4.getColor(dataPoint.value);
-              if (_this4.drawTrail) {
-                _this4.lineCoords.push([c.getLatLng().lat, c.getLatLng().lng]);
+              var c = _this5.createCircle(dataPoint);
+              _this5.lineColor = _this5.getColor(dataPoint.value);
+              if (_this5.drawTrail) {
+                _this5.lineCoords.push([c.getLatLng().lat, c.getLatLng().lng]);
               }
               circles.push(c);
             });
@@ -245,14 +252,14 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'clearPolyLine',
           value: function clearPolyLine() {
-            var _this5 = this;
+            var _this6 = this;
 
             if (this.linesLayer) {
               this.removeLines(this.linesLayer);
             }
             if (this.extraLineLayers) {
               this.extraLineLayers.forEach(function (layer) {
-                _this5.removeLines(layer);
+                _this6.removeLines(layer);
               });
             }
             if (this.markerLayers) {
@@ -260,7 +267,7 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
                 if (layer.getPopup()) {
                   layer.unbindPopup();
                 }
-                _this5.removeLines(layer);
+                _this6.removeLines(layer);
               });
             }
           }
@@ -278,7 +285,7 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'drawMarkers',
           value: function drawMarkers(dataset) {
-            var _this6 = this;
+            var _this7 = this;
 
             var self = this;
             dataset.forEach(function (dataPoint) {
@@ -286,7 +293,7 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
                 var marker = window.L.marker([dataPoint.locationLatitude, dataPoint.locationLongitude], {
                   title: dataPoint.marker,
                   draggable: false
-                }).addTo(_this6.map);
+                }).addTo(_this7.map);
                 var popup = window.L.popup().setContent('<b style="color: #666666">' + dataPoint.marker + '</b>');
                 marker.bindPopup(popup);
                 marker.on('click', function (evt) {
@@ -361,25 +368,25 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'updateCircles',
           value: function updateCircles(data) {
-            var _this7 = this;
+            var _this8 = this;
 
             data.forEach(function (dataPoint) {
               if (!dataPoint.locationName) return;
 
-              var circle = _.find(_this7.circles, function (cir) {
+              var circle = _.find(_this8.circles, function (cir) {
                 return cir.options.location === dataPoint.key;
               });
 
               if (circle) {
-                circle.setRadius(_this7.calcCircleSize(dataPoint.value || 0));
+                circle.setRadius(_this8.calcCircleSize(dataPoint.value || 0));
                 circle.setStyle({
-                  color: _this7.getColor(dataPoint.value),
-                  fillColor: _this7.getColor(dataPoint.value),
+                  color: _this8.getColor(dataPoint.value),
+                  fillColor: _this8.getColor(dataPoint.value),
                   fillOpacity: 0.5,
                   location: dataPoint.key
                 });
                 circle.unbindPopup();
-                _this7.createPopup(circle, dataPoint.locationName, dataPoint.valueRounded);
+                _this8.createPopup(circle, dataPoint.locationName, dataPoint.valueRounded);
               }
             });
           }
@@ -394,9 +401,20 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
               location: dataPoint.key
             });
             if (dataPoint.url) {
-              circle.on('click', function () {
-                window.location.replace(dataPoint.url);
-              });
+              if (this.ctrl.panel.urlFollowOptions.openInNewWindow) {
+                var name = '_blank';
+                var specs = '';
+                if (this.ctrl.panel.urlFollowOptions.useHeadlessWindow) {
+                  specs = 'menubar=0,resizable=1,location=0,titlebar=0,toolbar=0';
+                }
+                circle.on('click', function () {
+                  window.open(dataPoint.url, name, specs);
+                });
+              } else {
+                circle.on('click', function () {
+                  window.location.replace(dataPoint.url);
+                });
+              }
             }
 
             var value = dataPoint.valueRounded;
@@ -455,7 +473,9 @@ System.register(['lodash', './libs/leaflet', './libs/leaflet-ant-path', './color
         }, {
           key: 'resize',
           value: function resize() {
-            this.map.invalidateSize();
+            if (this.map && this.isMapReady && this.map.getContainer()) {
+              this.map.invalidateSize();
+            }
           }
         }, {
           key: 'panToMapCenter',

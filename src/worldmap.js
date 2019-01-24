@@ -69,6 +69,7 @@ export default class WorldMap {
     this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
     this.lastBounds = null;
     this.showAsAntPath = true;
+    this.isMapReady = false;
     return this.createMap();
   }
 
@@ -90,6 +91,10 @@ export default class WorldMap {
     this.map.on('zoomend', this.onZoom);
     this.map.on('moveend', this.onZoom);
     this.map.on('resize', this.onResize);
+
+    this.map.whenReady(() => {
+      this.isMapReady = true;
+    });
   }
 
   createLegend() {
@@ -374,7 +379,9 @@ export default class WorldMap {
   }
 
   resize() {
-    this.map.invalidateSize();
+    if (this.map && this.isMapReady && this.map.getContainer()) {
+      this.map.invalidateSize();
+    }
   }
 
   panToMapCenter() {

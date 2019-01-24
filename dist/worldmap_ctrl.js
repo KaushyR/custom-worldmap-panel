@@ -110,8 +110,11 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
           markerField: 'marker',
           customLabelField: 'label',
           urlField: 'url'
+        },
+        urlFollowOptions: {
+          openInNewWindow: true,
+          useHeadlessWindow: true
         }
-
       };
       mapCenters = {
         '(0°, 0°)': { mapCenterLatitude: 0, mapCenterLongitude: 0 },
@@ -240,7 +243,7 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
             } else if (this.panel.locationData === 'table') {
               // .. Do nothing
             } else if (this.panel.locationData !== 'geohash' && this.panel.locationData !== 'json result') {
-              window.$.getJSON('public/plugins/grafana-custom-worldmap-panel/data/' + this.panel.locationData + '.json').then(this.reloadLocations.bind(this));
+              window.$.getJSON('public/plugins/grafana-advanced-worldmap-panel/data/' + this.panel.locationData + '.json').then(this.reloadLocations.bind(this));
             }
           }
         }, {
@@ -267,7 +270,7 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
         }, {
           key: 'onInitEditMode',
           value: function onInitEditMode() {
-            this.addEditorTab('Worldmap', 'public/plugins/grafana-custom-worldmap-panel/partials/editor.html', 2);
+            this.addEditorTab('Worldmap', 'public/plugins/grafana-advanced-worldmap-panel/partials/editor.html', 2);
           }
         }, {
           key: 'onDataReceived',
@@ -467,6 +470,11 @@ System.register(['app/plugins/sdk', 'app/core/time_series2', 'app/core/utils/kbn
             } else {
               console.log("no variable 'bounds'");
             }
+          }
+        }, {
+          key: 'notEmpty',
+          value: function notEmpty(url) {
+            return url && url.trim().length > 0;
           }
         }, {
           key: 'link',
