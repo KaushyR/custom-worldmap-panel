@@ -5,7 +5,7 @@ import L from './libs/leaflet';
 import {
   antPath
 } from './libs/leaflet-ant-path';
-/* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds"] }] */
+/* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds","onEachGeoJsonFeature"] }] */
 /* eslint-disable no-extra-bind */
 import Colors from './colors';
 
@@ -60,6 +60,8 @@ export default class WorldMap {
     this.lineCoords = [];
     this.extraLineLayers = [];
     this.markerLayers = [];
+    this.geoJsonLayers = [];
+    this.geoJsonBounds = null;
     this.linesLayer = null;
     this.lineColor = _.first(this.ctrl.panel.colors);
     this.drawTrail = this.ctrl.panel.showTrail;
@@ -71,6 +73,7 @@ export default class WorldMap {
     this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
     this.lastBounds = null;
     this.showAsAntPath = true;
+    this.setBoundsOnFirstLoad = true;
     this.isMapReady = false;
     return this.createMap();
   }
@@ -152,6 +155,45 @@ export default class WorldMap {
       this.removeCircles(this.circlesLayer);
       this.circles = [];
     }
+  }
+
+  onEachGeoJsonFeature(feature, layer) {
+    // console.log('Feature %o', feature);
+    if (!this.ctrl.panel) {
+      return;
+    }
+
+    if (feature.properties[this.ctrl.panel.geoJsonOptions.popupContentField]) {
+      layer.bindPopup(feature.properties[this.ctrl.panel.geoJsonOptions.popupContentField]);
+    }
+  }
+
+  drawGeoJson() {
+    const self = this;
+    const data = this.ctrl.data;
+    if (!data || !data.length) {
+      return;
+    }
+    data.forEach((dataObj) => {
+      if (!dataObj || !dataObj.geoJson) {
+        return;
+      }
+      const geoJsonObj = JSON.parse(dataObj.geoJson);
+      const geoJsonLayer = window.L.geoJSON(geoJsonObj, {
+        onEachFeature: self.onEachGeoJsonFeature.bind(self)
+      }).addTo(this.map);
+
+      if (!this.geoJsonBounds) {
+        this.geoJsonBounds = geoJsonLayer.getBounds();
+      } else {
+        this.geoJsonBounds.extend(geoJsonLayer.getBounds());
+      }
+      if (this.geoJsonBounds && this.setBoundsOnFirstLoad) {
+        this.map.fitBounds(this.geoJsonBounds);
+      }
+
+      this.geoJsonLayers.push(geoJsonLayer);
+    });
   }
 
   drawCircles() {
@@ -485,6 +527,7 @@ export default class WorldMap {
     if (!moveEvent.target) {
       return;
     }
+    this.setBoundsOnFirstLoad = false;
     this.ctrl.onBoundsChange(this.flattenBounds(moveEvent.target.getBounds(), 'move'));
   }).bind(this);
 
@@ -492,6 +535,7 @@ export default class WorldMap {
     if (!zoomEvent.target) {
       return;
     }
+    this.setBoundsOnFirstLoad = false;
     this.ctrl.onBoundsChange(this.flattenBounds(zoomEvent.target.getBounds(), 'zoom'));
   }).bind(this);
 
