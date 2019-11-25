@@ -2,10 +2,12 @@ import _ from 'lodash';
 /* eslint-disable id-length, no-unused-vars */
 import L from './libs/leaflet';
 import {} from './libs/leaflet-markercluster/index';
+
 /* eslint-disable id-length, no-unused-vars */
 import {
   antPath
 } from './libs/leaflet-ant-path';
+import './libs/leaflet-label';
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds","onEachGeoJsonFeature"] }] */
 /* eslint-disable no-extra-bind */
 import Colors from './colors';
@@ -64,6 +66,7 @@ export default class WorldMap {
     this.geoJsonLayers = [];
     this.geoJsonBounds = null;
     this.linesLayer = null;
+    this.pinsLayer = null;
     this.lineColor = _.first(this.ctrl.panel.colors);
     this.drawTrail = this.ctrl.panel.showTrail;
     this.antPathDelay = this.ctrl.panel.antPathDelay;
@@ -80,7 +83,7 @@ export default class WorldMap {
   }
 
   createMap() {
-    window.L.Icon.Default.imagePath = 'public/plugins/grafana-advanced-worldmap-panel/images/';
+    window.L.Icon.Default.imagePath = 'public/plugins/grafana-custom-worldmap-panel/images/';
     const mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
     this.map = window.L.map(this.mapContainer, {
       worldCopyJump: true,
@@ -167,6 +170,12 @@ export default class WorldMap {
     if (feature.properties[this.ctrl.panel.geoJsonOptions.popupContentField]) {
       layer.bindPopup(feature.properties[this.ctrl.panel.geoJsonOptions.popupContentField]);
     }
+    if (feature.properties[this.ctrl.panel.geoJsonOptions.labelField]) {
+      layer.bindLabel(feature.properties[this.ctrl.panel.geoJsonOptions.labelField]);
+    }
+    if (feature.properties[this.ctrl.panel.geoJsonOptions.clickDataField]) {
+      layer.on('click', this.ctrl.emitClick(feature.properties[this.ctrl.panel.geoJsonOptions.clickDataField]));
+    }
   }
 
   drawGeoJson() {
@@ -183,7 +192,12 @@ export default class WorldMap {
       const geoJsonLayer = window.L.geoJSON(geoJsonObj, {
         onEachFeature: self.onEachGeoJsonFeature.bind(self)
       }).addTo(this.map);
-
+      if (dataObj.label) {
+        const label = new window.L.Label();
+        label.setContent(dataObj.label);
+        label.setLatLng(geoJsonLayer.getBounds().getCenter());
+        this.map.showLabel(label);
+      }
       if (!this.geoJsonBounds) {
         this.geoJsonBounds = geoJsonLayer.getBounds();
       } else {
@@ -252,6 +266,29 @@ export default class WorldMap {
     }
   }
 
+  drawPin(lat, long) {
+    if (this.pinsLayer) {
+      this.pinsLayer.remove();
+    }
+    this.pinsLayer = window.L.layerGroup([]);
+
+    console.log('drawpin', lat, long);
+    const marker = window.L.marker([lat, long], {
+      title: '',
+      draggable: false,
+    });
+
+    this.pinsLayer.addLayer(marker);
+    this.pinsLayer.addTo(this.map);
+  }
+
+  clearPins() {
+    if (this.pinsLayer) {
+      this.pinsLayer.remove();
+      this.pinsLayer = null;
+    }
+  }
+
   toCoords(dataset) {
     const resultArr = [];
 
@@ -271,6 +308,7 @@ export default class WorldMap {
           title: dataPoint.marker,
           draggable: false,
         });
+
         const popup = window.L.popup().setContent('<b style="color: #666666">' + dataPoint.marker + '</b>');
         marker.bindPopup(popup);
         marker.on('click', (evt) => {
