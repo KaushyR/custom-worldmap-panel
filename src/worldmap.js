@@ -272,7 +272,6 @@ export default class WorldMap {
     }
     this.pinsLayer = window.L.layerGroup([]);
 
-    console.log('drawpin', lat, long);
     const marker = window.L.marker([lat, long], {
       title: '',
       draggable: false,
