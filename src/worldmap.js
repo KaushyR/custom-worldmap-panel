@@ -83,7 +83,7 @@ export default class WorldMap {
   }
 
   createMap() {
-    window.L.Icon.Default.imagePath = 'public/plugins/grafana-advanced-worldmap-panel/images/';
+    window.L.Icon.Default.imagePath = 'public/plugins/advanced-worldmap-panel/images/';
     const mapCenter = window.L.latLng(parseFloat(this.ctrl.panel.mapCenterLatitude), parseFloat(this.ctrl.panel.mapCenterLongitude));
     this.map = window.L.map(this.mapContainer, {
       worldCopyJump: true,
