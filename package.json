@@ -1,14 +1,14 @@
 {
-  "name": "advanced-worldmap-panel",
-  "version": "2.1.0",
-  "description": "Advanced Worldmap Panel Plugin for Trapeze Grafana",
+  "name": "custom-worldmap-panel",
+  "version": "1.3.0",
+  "description": "Worldmap Panel Plugin for Trapeze Grafana",
   "main": "src/module.js",
   "scripts": {
     "clean": "grunt clean",
     "lint": "eslint --color .",
     "lint:watch": "onchange 'src/**/*.js' -- npm run lint",
     "build": "grunt",
-    "prebuild": "npm run clean && npm run lint",
+    "prebuild": "npm run clean",
     "build:watch": "onchange './src/**/*.js' './src/**/*.css' './src/**/*.html' './src/plugin.json' -- npm run build",
     "test:watch": "karma start",
     "test": "karma start --single-run"
