@@ -1,2 +1,2 @@
-# custom-worldmap-panel
-Custom worldmap panel for grafana
+# advanced-worldmap-panel
+Advanced worldmap panel for grafana
