@@ -272,7 +272,13 @@ export default class WorldMap {
     }
     this.pinsLayer = window.L.layerGroup([]);
 
-    const marker = window.L.marker([lat, long], {
+    console.log('drawpin', lat, long);
+    const marker = window.L.circleMarker([lat, long], {
+      radius: 5,
+      fill: true,
+      fillOpacity: 0.8,
+      fillColor: '#33a3ff',
+      color: '#3388ff',
       title: '',
       draggable: false,
     });
