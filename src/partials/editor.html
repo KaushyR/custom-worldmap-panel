@@ -64,6 +64,8 @@
     <gf-form-switch class="gf-form" label="Show Trail" label-class="width-10" checked="ctrl.panel.showTrail" on-change="ctrl.toggleShowTrail()"></gf-form-switch>
     <gf-form-switch class="gf-form" label="Ant Path" label-class="width-10" checked="ctrl.panel.showAsAntPath"
       on-change="ctrl.toggleShowAsAntPath()"></gf-form-switch>
+    <gf-form-switch class="gf-form" label="Show Lines" label-class="width-10" checked="ctrl.panel.showLines"
+      on-change="ctrl.toggleShowLines()" tooltip="Show Data as Lines instead of points"></gf-form-switch>
   </div>
   <div class="section gf-form-group">
     <h5 class="section-heading">Map Data Options</h5>
@@ -234,6 +236,11 @@
         <option value="9">J</option>
       </select>
     </div>
+    <div class="gf-form" ng-show="ctrl.panel.locationData === 'table'">
+      <label class="gf-form-label width-12">Custom Label Field</label>
+      <input type="text" class="input-small gf-form-input width-10" ng-model="ctrl.panel.tableQueryOptions.customLabelField"
+             ng-change="ctrl.refresh()" ng-model-onblur />
+    </div>
     <gf-form-switch class="gf-form" label="Sort By Time" label-class="width-10" checked="ctrl.panel.tableQueryOptions.sortByTime"
       on-change="ctrl.toggleSortByTime()">
     </gf-form-switch>
@@ -246,11 +253,6 @@
       <label class="gf-form-label width-12">Use Headless Window</label>
       <gf-form-switch class="gf-form" checked="ctrl.panel.urlFollowOptions.useHeadlessWindow"
       on-change="ctrl.render()"/>
-    </div>
-    <div class="gf-form" ng-show="ctrl.panel.locationData === 'table'">
-      <label class="gf-form-label width-12">Custom Label Field</label>
-      <input type="text" class="input-small gf-form-input width-10" ng-model="ctrl.panel.tableQueryOptions.customLabelField"
-        ng-change="ctrl.refresh()" ng-model-onblur />
     </div>
     <div class="gf-form" ng-show="ctrl.panel.locationData === 'geohash'">
       <label class="gf-form-label width-12">Location Name Field</label>

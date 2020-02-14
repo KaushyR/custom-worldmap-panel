@@ -2,6 +2,7 @@ import './css/leaflet.css!';
 import './css/MarkerCluster.css!';
 import './css/MarkerCluster.Default.css!';
 import WorldMap from './worldmap';
+let firstRender = true;
 
 export default function link(scope, elem, attrs, ctrl) {
   ctrl.events.on('render', () => {
@@ -11,6 +12,13 @@ export default function link(scope, elem, attrs, ctrl) {
 
   function render() {
     if (!ctrl.data) return;
+
+    // delay first render as the map panel sizing is bugged first render even though the element has correct height
+    if (firstRender) {
+      firstRender = false;
+      setTimeout(render, 100);
+      return;
+    }
 
     const mapContainer = elem.find('.mapcontainer');
 
@@ -31,6 +39,8 @@ export default function link(scope, elem, attrs, ctrl) {
 
     if (ctrl.panel.locationData === 'geo json') {
       ctrl.map.drawGeoJson();
+    } else if(ctrl.panel.showLines) {
+      ctrl.map.drawLines()
     } else {
       ctrl.map.drawCircles();
     }

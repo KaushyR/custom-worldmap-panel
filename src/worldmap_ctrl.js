@@ -37,6 +37,7 @@ const panelDefaults = {
   mouseWheelZoom: false,
   showTrail: false,
   showAsAntPath: false,
+  showLines: false,
   antPathDelay: 400,
   useCustomAntPathColor: false,
   antPathColor: 'rgba(50, 172, 45, 0.97)',
@@ -52,6 +53,7 @@ const panelDefaults = {
   tableQueryOptions: {
     queryType: 'geohash',
     geohashField: 'geohash',
+    labelField: 'location',
     latitudeField: 'latitude',
     longitudeField: 'longitude',
     metricField: 'metric',
@@ -104,14 +106,14 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   currentTileServer;
   context;
 
-  constructor($scope, $injector, contextSrv, datasourceSrv, variableSrv) {
+  constructor($scope, $injector) {
     super($scope, $injector);
-    this.context = contextSrv;
+    this.context = $injector.get('contextSrv');
+    this.variableSrv =  $injector.get('variableSrv');
     _.defaults(this.panel, panelDefaults);
     this.tileServer = this.panel.mapTileServer;
     this.currentTileServer = this.panel.mapTileServer;
-    this.setMapProvider(contextSrv);
-    this.variableSrv = variableSrv;
+    this.setMapProvider(this.context);
 
     this.dataFormatter = new DataFormatter(this, kbn);
 
@@ -127,6 +129,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   onGraphHover(ev) {
+    if(!this.dashboard.sharedTooltipModeEnabled()) return;
     if (this.data) {
       let idx = this.panel.tableQueryOptions.timestampDataQueryIndex;
 
@@ -139,12 +142,14 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   drawPinAtTimestamp(time, data) {
     let dataItem = this.findClosestMatch(time, data);
     if (dataItem) {
-      // console.log(dataItem.time, dataItem.locationLatitude, dataItem.locationLongitude);
-      this.map.drawPin(dataItem.locationLatitude, dataItem.locationLongitude);
+      this.map.drawPin(dataItem);
     }
   }
 
   findClosestMatch(num, arr) {
+    if (!arr || !arr[0] || typeof arr[0].time === 'undefined') {
+      return ;
+    }
     let mid;
     let lo = 0;
     let hi = arr.length - 1;
@@ -283,6 +288,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
   }
 
   onDataReceived(dataList) {
+    let start = new Date().getTime();
     if (!dataList) return;
 
     if (this.dashboard.snapshot && this.locations) {
@@ -315,6 +321,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
     } else {
       this.render();
     }
+    // console.log('It took [' + (new Date().getTime() - start )+ 'ms] to received data form server ' );
   }
 
   centerOnLastGeoHash() {
@@ -378,6 +385,10 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
 
   toggleShowAsAntPath() {
     this.map.setShowAsAntPath(this.panel.showAsAntPath);
+  }
+
+  toggleShowLines() {
+    this.map.setShowLines(this.panel.showLines);
   }
 
   changeAntpathOptions() {
@@ -452,7 +463,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
 
   onBoundsChange(boundsObj) {
     if (boundsObj.maxChangeDelta < 0.5) {
-      console.log('bounds change delta %o is too small to update variable', boundsObj.maxChangeDelta);
+      // console.log('bounds change delta %o is too small to update variable', boundsObj.maxChangeDelta);
       return;
     }
     const boundsJson = boundsObj;
@@ -469,7 +480,7 @@ export default class WorldmapCtrl extends MetricsPanelCtrl {
       // console.log(boundsVar);
       // console.log(this);
     } else {
-      console.log("no variable 'bounds'");
+      // console.log("no variable 'bounds'");
     }
   }
 

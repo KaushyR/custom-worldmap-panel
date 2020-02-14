@@ -11,6 +11,7 @@ import './libs/leaflet-label';
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["toCoords","flattenBounds","onEachGeoJsonFeature"] }] */
 /* eslint-disable no-extra-bind */
 import Colors from './colors';
+import {appEvents} from 'app/core/core';
 
 
 const tileServers = {
@@ -77,8 +78,20 @@ export default class WorldMap {
     this.extraLineSecondaryColors = this.ctrl.panel.extraLineSecondaryColors;
     this.lastBounds = null;
     this.showAsAntPath = true;
+    this.showLines = this.ctrl.panel.showLines;
+    this.lineLayers = [];
     this.setBoundsOnFirstLoad = true;
     this.isMapReady = false;
+    this.lineColors = ['#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6',
+      '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+      '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
+      '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+      '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
+      '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#1AB399',
+      '#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680',
+      '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
+      '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
+      '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF'];
     return this.createMap();
   }
 
@@ -104,6 +117,9 @@ export default class WorldMap {
     this.map.on('zoomend', this.onZoom);
     this.map.on('moveend', this.onZoom);
     this.map.on('resize', this.onResize);
+    this.map.on('mouseout', function() {
+      appEvents.emit('graph-hover-clear');
+    });
 
     this.map.whenReady(() => {
       this.isMapReady = true;
@@ -266,13 +282,15 @@ export default class WorldMap {
     }
   }
 
-  drawPin(lat, long) {
+  drawPin(dataItem) {
+    const lat = dataItem.locationLatitude;
+    const long = dataItem.locationLongitude;
     if (this.pinsLayer) {
       this.pinsLayer.remove();
     }
     this.pinsLayer = window.L.layerGroup([]);
 
-    console.log('drawpin', lat, long);
+    //console.log('drawpin', lat, long);
     const marker = window.L.circleMarker([lat, long], {
       radius: 5,
       fill: true,
@@ -282,9 +300,13 @@ export default class WorldMap {
       title: '',
       draggable: false,
     });
+    let label = this.getLabelForPopup(dataItem);
+    label += "<div>" + this.ctrl.dashboard.formatDate(dataItem.time) + "</div>";
 
+    this.createPopup(marker, label);
     this.pinsLayer.addLayer(marker);
     this.pinsLayer.addTo(this.map);
+    marker.openPopup([lat, long]);
   }
 
   clearPins() {
@@ -388,6 +410,141 @@ export default class WorldMap {
     return this.linesLayer;
   }
 
+  drawLines() {
+    // console.log(this.ctrl.data)
+    const start = new Date().getTime();
+    this.clearLines();
+    this.ctrl.data.forEach((data) => {
+      data = this.filterEmptyAndZeroValues(data);
+      this.drawLine(data);
+    })
+    // console.log('It took [' + (new Date().getTime()-start)+'ms] to process data and draw the map' )
+  }
+  clearLines() {
+    if (this.lineLayers) {
+      this.lineLayers.forEach((layer) => {
+        this.removeLines(layer);
+      });
+      this.lineLayers = [];
+    }
+  }
+
+  drawLine(data) {
+    if (!data || !data[0] || typeof data[0].locationName === 'undefined'||!data[0].locationName) return;
+
+    const trips=[];
+    let lines={};
+    let lastLocationTimes = {};
+    data.forEach((dataPoint) => {
+      let vehicleId = dataPoint.locationName;
+      let line = lines[vehicleId];
+      let lastLocationTime = lastLocationTimes[vehicleId];
+      if(!line)  line =[];
+      if(!lastLocationTime) lastLocationTime = 0;
+
+/*
+      if (lastLocationTime > 0 && (dataPoint.time - lastLocationTime) > (2*60*60*1000)) {
+        // If trip time is more than 2 hours
+        trips.push([...line]);
+        line =[];
+      }
+*/
+      line.push([dataPoint.locationLatitude, dataPoint.locationLongitude]);
+      lastLocationTime = dataPoint.time;
+
+      lines[vehicleId] = line;
+      lastLocationTimes[vehicleId] = lastLocationTime;
+    });
+    // console.log(lines);
+    // console.log(lastLocationTimes);
+
+    // lines.forEach((line) =>{
+    for (const vehicleId in lines) {
+      trips.push(lines[vehicleId]);
+    }
+    // console.log(trips);
+    let bounds;
+    trips.forEach((trip,index) => {
+      const linesLayer = window.L.polyline(trip, {
+        color: this.lineColors[index % this.lineColors.length],
+        weight: 5
+      }).addTo(this.map);
+      linesLayer.on('mousemove', this.onMouseMove);
+      if(bounds) {
+        bounds.extend(linesLayer.getBounds());
+      } else {
+        bounds = linesLayer.getBounds();
+      }
+      // console.log(linesLayer.getBounds());
+      this.lineLayers.push(linesLayer)
+    });
+    // console.log(bounds);
+    if(bounds && bounds.isValid()) {
+      this.map.fitBounds(bounds)
+    }
+  }
+
+  onMouseMove = ((mouseMoveEvent) => {
+    if (!mouseMoveEvent.latlng) {
+      return;
+    }
+    this.findClosestGeoLocation(mouseMoveEvent.latlng);
+  }).bind(this);
+
+  findClosestGeoLocation(latlng){
+    const start = new Date().getTime();
+
+    if (this.ctrl.data) {
+      let idx = this.ctrl.panel.tableQueryOptions.timestampDataQueryIndex;
+
+      if (idx >= 0 && idx < this.ctrl.data.length) {
+        const locations = this.ctrl.data[idx];
+        let closest = locations[0];
+        let closest_distance = this.distance(closest, latlng);
+        for(let i=1; i<locations.length; i++){
+          const currentDistance = this.distance(locations[i],latlng)
+          if(currentDistance<closest_distance){
+            closest_distance = currentDistance;
+            closest=locations[i];
+          }
+        }
+        let pos = {
+          x : closest.time,
+          y: 10,
+          x1 : closest.time,
+          y1 : 10,
+          panelRelY : 0.54
+        };
+        const panel = this.ctrl.panel;
+        appEvents.emit('graph-hover', { pos: pos, panel :panel });
+      }
+    }
+    // console.log('Search location done in [' + (new Date().getTime() - start) + 'ms]')
+  }
+  distance(position1,position2){
+    const lat1 = position1.locationLatitude;
+    const lon1 = position1.locationLongitude;
+    const lat2 = position2.lat;
+    const lon2=position2.lng;
+    const R = 6371000; // metres
+    const φ1 = this.toRad(lat1);
+    const φ2 = this.toRad(lat2);
+    const Δφ = this.toRad((lat2-lat1));
+    const Δλ = this.toRad((lon2-lon1));
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    const d = R * c;
+    return d;
+  }
+
+  toRad(Value) {
+    /** Converts numeric degrees to radians */
+    return Value * Math.PI / 180;
+  }
   updateCircles(data) {
     data.forEach((dataPoint) => {
       if (!dataPoint.locationName) return;
@@ -435,16 +592,21 @@ export default class WorldMap {
       }
     }
 
+    let label = this.getLabelForPopup(dataPoint);
+    this.createPopup(circle, label);
+    return circle;
+  }
+
+  getLabelForPopup(dataPoint) {
     const value = dataPoint.valueRounded;
     let label = '';
     if (dataPoint.label) {
       label = dataPoint.label;
     } else {
       const unit = value && value === 1 ? this.ctrl.panel.unitSingular : this.ctrl.panel.unitPlural;
-      label = (dataPoint.locationName + ': ' + value + ' ' + (unit || '')).trim();
+      label = (dataPoint.locationName + (!isNaN(value) ?': ' + value + ' ' + (unit || '') : '')).trim();
     }
-    this.createPopup(circle, label);
-    return circle;
+    return label;
   }
 
   calcCircleSize(dataPointValue) {
@@ -479,6 +641,7 @@ export default class WorldMap {
         circle.closePopup();
       });
     }
+    return circle;
   }
 
   getColor(value) {
@@ -557,6 +720,10 @@ export default class WorldMap {
 
   setShowAsAntPath(flag) {
     this.showAsAntPath = flag;
+  }
+
+  setShowLines(flag) {
+    this.showLines = flag;
   }
 
   setZoom(zoomFactor) {
